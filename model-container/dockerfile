@@ -1,0 +1,41 @@
+FROM nvcr.io/nvidia/tensorrt:23.05-py3 AS build
+
+# Set working directory
+WORKDIR /model-container
+
+# Update apt packages
+RUN apt-get update && apt-get install -y \
+    g++ \
+    curl \
+    build-essential \
+    python3-dev && \
+    pip install --upgrade pip setuptools wheel
+
+# Install uv package manager
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+
+# Run the installer then remove it
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+# Ensure the installed binary is on the `PATH`
+ENV PATH="/root/.local/bin/:$PATH"
+
+# Set environment variables for uv
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Copy pyproject.toml and uv.lock files
+COPY pyproject.toml uv.lock /model-container/
+
+# Install dependencies pake uv
+RUN uv sync --frozen --no-install-project --no-dev
+
+# Set environment variables
+ENV PATH="/model-container/.venv/bin:$PATH"
+
+# Expose port yang dibutuhkan (jika perlu, misal buat aplikasi lain)
+EXPOSE 5000
+
+# Command buat tetep jalan meskipun program selesai
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]  
+
+# CMD ["tail", "-f", "/dev/null"]
