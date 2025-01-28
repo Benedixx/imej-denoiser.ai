@@ -8,6 +8,8 @@ services:
       - ./backend/app:/backend/app 
     env_file:
       - ./backend/.env
+    depends_on:
+      - model
 
   model:
     build: ./model-container
